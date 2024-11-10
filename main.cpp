@@ -10,13 +10,13 @@ int main() {
     std::vector<unsigned char> pixeles;
     int ancho, alto;
 
-    cargarImagen(rutaImagen, pixeles, ancho, alto);
+    leerPixeles(rutaImagen, pixeles, ancho, alto);
 
     if (pixeles.empty()) {
         return -1;
     }
 
-    escribirImagen("salida.png", pixeles, ancho, alto);
+    escribirPixeles("salida.png", pixeles, ancho, alto);
 
     return 0;
 }

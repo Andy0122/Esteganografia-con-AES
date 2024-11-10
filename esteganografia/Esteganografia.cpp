@@ -8,7 +8,7 @@
 #include <iostream>
 
 
-bool ESTAGANOGRAFIA::cargarImagen(const std::string& nombreArchivo, std::vector<unsigned char>& pixeles, int& ancho, int& alto) {
+bool ESTAGANOGRAFIA::leerPixeles(const std::string& nombreArchivo, std::vector<unsigned char>& pixeles, int& ancho, int& alto) {
     int canales;
     unsigned char* imagen = stbi_load(nombreArchivo.c_str(), &ancho, &alto, &canales, CANALES_RGB);
     if (!imagen) {
@@ -22,7 +22,7 @@ bool ESTAGANOGRAFIA::cargarImagen(const std::string& nombreArchivo, std::vector<
     return true;
 }
 
-void ESTAGANOGRAFIA::escribirImagen(const std::string& nombreArchivo, const std::vector<unsigned char>& pixeles, int& ancho, int& alto) {
+void ESTAGANOGRAFIA::escribirPixeles(const std::string& nombreArchivo, const std::vector<unsigned char>& pixeles, int& ancho, int& alto) {
     if (stbi_write_png(nombreArchivo.c_str(), ancho, alto, CANALES_RGB, pixeles.data(), ancho * CANALES_RGB) == 0) {
         std::cerr << "Error al escribir la imagen: " << nombreArchivo << std::endl;
     } else {
