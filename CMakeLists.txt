@@ -1,13 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
-
-# Nombre del proyecto
 project(Esteganografia_con_AES)
 
 # Establecer el estándar de C++
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 17)
 
-# Añadir subdirectorios
+# Incluir los directorios de las biblioteca stb_image
 add_subdirectory(esteganografia)
 
 # Añadir el ejecutable
