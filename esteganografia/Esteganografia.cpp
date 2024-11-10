@@ -7,7 +7,6 @@
 #include "Esteganografia.h"
 #include <iostream>
 
-using namespace ESTAGANOGRAFIA;
 
 bool ESTAGANOGRAFIA::cargarImagen(const std::string& nombreArchivo, std::vector<unsigned char>& pixeles, int& ancho, int& alto) {
     int canales;
@@ -21,4 +20,12 @@ bool ESTAGANOGRAFIA::cargarImagen(const std::string& nombreArchivo, std::vector<
 
     stbi_image_free(imagen);
     return true;
+}
+
+void ESTAGANOGRAFIA::escribirImagen(const std::string& nombreArchivo, const std::vector<unsigned char> &pixeles, int& ancho, int& alto) {
+    if (stbi_write_png(nombreArchivo.c_str(), ancho, alto, CANALES_RGB, pixeles.data(), ancho * CANALES_RGB) == 0) {
+        std::cerr << "Error al escribir la imagen: " << nombreArchivo << std::endl;
+    } else {
+        std::cout << "Imagen guardada correctamente: " << nombreArchivo << std::endl;
+    }
 }

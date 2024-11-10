@@ -17,6 +17,8 @@ namespace ESTAGANOGRAFIA {
 
     bool cargarImagen(const std::string& nombreArchivo, std::vector<unsigned char>& pixeles, int& ancho, int& alto);
 
+    void escribirImagen(const std::string& nombreArchivo, const std::vector<unsigned char>& pixeles, int& ancho, int& alto);
+
 } // ESTAGANOGRAFIA
 
 #endif //ESTEGANOGRAFIA_H
