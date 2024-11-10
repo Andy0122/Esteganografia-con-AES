@@ -16,19 +16,6 @@ int main() {
         return -1;
     }
 
-    // Imprimir los píxeles en formato RGB
-    // std::cout << "Pixels (RGB):" << std::endl;
-    // for (int i = 0; i < ancho * alto * CANALES_RGB; i += CANALES_RGB) {
-    //     const unsigned char r = pixeles[i];
-    //     const unsigned char g = pixeles[i + 1];
-    //     const unsigned char b = pixeles[i + 2];
-    //
-    //     // Imprimir el valor RGB
-    //     std::cout << "R: " << static_cast<int>(r) << ", "
-    //               << "G: " << static_cast<int>(g) << ", "
-    //               << "B: " << static_cast<int>(b) << std::endl;
-    // }
-
     escribirImagen("salida.png", pixeles, ancho, alto);
 
     return 0;
