@@ -8,15 +8,6 @@
 
 namespace ESTAGANOGRAFIA {
 
-    /**
-     * @brief Estructura que representa un píxel en formato RGB.
-     */
-    struct RGB {
-        uint8_t r;
-        uint8_t g;
-        uint8_t b;
-    };
-
     constexpr int CANALES_RGB = 3; ///< Número de canales de color (R, G, B).
 
     /**
@@ -30,13 +21,22 @@ namespace ESTAGANOGRAFIA {
     bool leerPixeles(const std::string& nombreArchivo, std::vector<unsigned char>& pixeles, int& ancho, int& alto);
 
     /**
+    * @brief Coloca un mensaje en los píxeles de la imagen.
+    * @param pixeles Vector con los píxeles de la imagen.
+    * @param mensaje Mensaje a impregnar en la imagen.
+    */
+    void impregnarMensaje(std::vector<unsigned char>& pixeles, const std::string& mensaje);
+
+    /**
      * @brief Escribe los pixeles en un archivo PNG.
      * @param nombreArchivo Nombre del archivo de la imagen.
      * @param pixeles Vector con los píxeles de la imagen.
      * @param ancho Ancho de la imagen.
      * @param alto Alto de la imagen.
      */
-    void escribirPixeles(const std::string& nombreArchivo, const std::vector<unsigned char>& pixeles, int& ancho, int& alto);
+    void escribirPixeles(const std::string& nombreArchivo, const std::vector<unsigned char>& pixeles, const int& ancho, const int& alto);
+
+
 
 } // ESTAGANOGRAFIA
 

@@ -16,11 +16,9 @@ int main() {
         return -1;
     }
 
+    impregnarMensaje(pixeles, "00111010101");
+
     escribirPixeles("salida.png", pixeles, ancho, alto);
 
     return 0;
 }
-
-// Read pixels
-// Modify pixels
-// Write pixels
