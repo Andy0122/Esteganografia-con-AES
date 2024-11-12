@@ -22,57 +22,61 @@ bool ESTAGANOGRAFIA::leerPixeles(const std::string& nombreArchivo, std::vector<u
     return true;
 }
 
-void dividirMensajeEnBloques(const std::string& mensaje, std::vector<std::string>& bloques) {
-    for (size_t i = 0; i < mensaje.size(); i += 3) {
-        bloques.push_back(mensaje.substr(i, 3));
-    }
-}
-
-void escribirSobreCanal(unsigned char& canal, const unsigned char bit) {
-    if (bit == '1') {
-        canal |= 1; // Establecer el bit menos significativo en 1
-    } else {
-        canal &= ~1; // Establecer el bit menos significativo en 0
-    }
-}
-
 void ESTAGANOGRAFIA::impregnarMensaje(std::vector<unsigned char>& pixeles, const std::string& mensaje) {
-    // Restricciones:
-    if (mensaje.size() / 3 > pixeles.size()) {
+    if (mensaje.size() / 3 + BITS_DE_TAMANIO > pixeles.size()) {
         std::cerr << "El mensaje es demasiado grande para la imagen." << std::endl;
         return;
     }
-
     if (mensaje.empty()) {
         std::cerr << "El mensaje está vacío." << std::endl;
         return;
     }
+    if (pixeles.empty()) {
+        std::cerr << "No hay pixeles en la imagen." << std::endl;
+        return;
+    }
+
+    // Escribir el tamaño del mensaje en los primeros 32 bits
+    const uint32_t tamanio = mensaje.size();
+    escribirTamanioMensaje(pixeles, tamanio);
 
     // Dividir el mensaje en bloques de 3 caracteres
     std::vector<std::string> bloques;
     dividirMensajeEnBloques(mensaje, bloques);
 
-    // Inicializar el indice de los pixeles
-    int pixel = 0;
-    // Iterar sobre los bloques de 3 caracteres
+    int pixel = BITS_DE_TAMANIO;
     for (std::string& bloque : bloques) {
-        // Si el tamaño del bloque mayor o igual a 1
         if (bloque.size() >= 1) {
-            // escribir el primer bit en el canal R
             escribirSobreCanal(pixeles[pixel], bloque[0]);
         }
-        // Si el tamaño del bloque mayor o igual a 2
         if (bloque.size() >= 2) {
-            // escribir el segundo bit en el canal G
             escribirSobreCanal(pixeles[pixel + 1], bloque[1]);
         }
-        // Si el tamaño del bloque mayor o igual a 3
         if (bloque.size() == 3) {
-            // escribir el tercer bit en el canal B
             escribirSobreCanal(pixeles[pixel + 2], bloque[2]);
         }
-        // Incrementar el indice de los pixeles
         pixel += 3;
+    }
+}
+
+void ESTAGANOGRAFIA::escribirTamanioMensaje(std::vector<unsigned char>& pixeles, const uint32_t tamanio) {
+    for (int i = 0; i < BITS_DE_TAMANIO; i++) {
+        const uint8_t bit = (tamanio >> ((BITS_DE_TAMANIO - 1) - i)) & 1; // Bit shifting
+        escribirSobreCanal(pixeles[i], bit);
+    }
+}
+
+void ESTAGANOGRAFIA::dividirMensajeEnBloques(const std::string& mensaje, std::vector<std::string>& bloques) {
+    for (size_t i = 0; i < mensaje.size(); i += 3) {
+        bloques.push_back(mensaje.substr(i, 3));
+    }
+}
+
+void ESTAGANOGRAFIA::escribirSobreCanal(unsigned char& canal, const unsigned char bit) {
+    if (bit == '1') {
+        canal |= 1; // Establecer el bit menos significativo en 1
+    } else {
+        canal &= ~1; // Establecer el bit menos significativo en 0
     }
 }
 
