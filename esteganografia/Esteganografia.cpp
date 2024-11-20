@@ -6,84 +6,137 @@
 
 #include "Esteganografia.h"
 #include <iostream>
+#include <bitset>
 
+namespace ESTEGANOGRAFIA {
 
-bool ESTAGANOGRAFIA::leerPixeles(const std::string& nombreArchivo, std::vector<unsigned char>& pixeles, int& ancho, int& alto) {
-    int canales;
-    unsigned char* imagen = stbi_load(nombreArchivo.c_str(), &ancho, &alto, &canales, CANALES_RGB);
-    if (!imagen) {
-        std::cerr << "Error al cargar la imagen: " << nombreArchivo << std::endl;
-        return false;
+    // Funciones auxiliares privadas (no expuestas en el encabezado)
+    namespace {
+        void escribirTamanioMensaje(std::vector<unsigned char>& pixeles, uint32_t tamanio);
+        uint32_t leerTamanioMensaje(const std::vector<unsigned char>& pixeles);
+        void escribirBitEnPixel(unsigned char& canal, uint8_t bit);
+        uint8_t leerBitDePixel(const unsigned char& canal);
     }
 
-    pixeles.assign(imagen, imagen + ancho * alto * CANALES_RGB);
-
-    stbi_image_free(imagen);
-    return true;
-}
-
-void ESTAGANOGRAFIA::impregnarMensaje(std::vector<unsigned char>& pixeles, const std::string& mensaje) {
-    if (mensaje.size() / 3 + BITS_DE_TAMANIO > pixeles.size()) {
-        std::cerr << "El mensaje es demasiado grande para la imagen." << std::endl;
-        return;
-    }
-    if (mensaje.empty()) {
-        std::cerr << "El mensaje está vacío." << std::endl;
-        return;
-    }
-    if (pixeles.empty()) {
-        std::cerr << "No hay pixeles en la imagen." << std::endl;
-        return;
-    }
-
-    // Escribir el tamaño del mensaje en los primeros 32 bits
-    const uint32_t tamanio = mensaje.size();
-    escribirTamanioMensaje(pixeles, tamanio);
-
-    // Dividir el mensaje en bloques de 3 caracteres
-    std::vector<std::string> bloques;
-    dividirMensajeEnBloques(mensaje, bloques);
-
-    int pixel = BITS_DE_TAMANIO;
-    for (std::string& bloque : bloques) {
-        if (bloque.size() >= 1) {
-            escribirSobreCanal(pixeles[pixel], bloque[0]);
+    bool leerPixeles(const std::string& nombreArchivo, std::vector<unsigned char>& pixeles, int& ancho, int& alto) {
+        int canales;
+        unsigned char* imagen = stbi_load(nombreArchivo.c_str(), &ancho, &alto, &canales, CANALES_RGB);
+        if (!imagen) {
+            std::cerr << "Error al cargar la imagen: " << nombreArchivo << std::endl;
+            return false;
         }
-        if (bloque.size() >= 2) {
-            escribirSobreCanal(pixeles[pixel + 1], bloque[1]);
+
+        pixeles.assign(imagen, imagen + ancho * alto * CANALES_RGB);
+
+        stbi_image_free(imagen);
+        return true;
+    }
+
+    void impregnarMensaje(std::vector<unsigned char>& pixeles, const std::vector<uint8_t>& mensaje) {
+        size_t capacidadBits = pixeles.size(); // Un bit por canal
+        size_t bitsNecesarios = BITS_DE_TAMANIO + mensaje.size() * 8;
+
+        if (bitsNecesarios > capacidadBits) {
+            std::cerr << "El mensaje es demasiado grande para la imagen." << std::endl;
+            return;
         }
-        if (bloque.size() == 3) {
-            escribirSobreCanal(pixeles[pixel + 2], bloque[2]);
+
+        if (mensaje.empty()) {
+            std::cerr << "El mensaje está vacío." << std::endl;
+            return;
         }
-        pixel += 3;
-    }
-}
 
-void ESTAGANOGRAFIA::escribirTamanioMensaje(std::vector<unsigned char>& pixeles, const uint32_t tamanio) {
-    for (int i = 0; i < BITS_DE_TAMANIO; i++) {
-        const uint8_t bit = (tamanio >> ((BITS_DE_TAMANIO - 1) - i)) & 1; // Bit shifting
-        escribirSobreCanal(pixeles[i], bit);
-    }
-}
+        // Escribir el tamaño del mensaje en los primeros 32 bits
+        escribirTamanioMensaje(pixeles, mensaje.size());
 
-void ESTAGANOGRAFIA::dividirMensajeEnBloques(const std::string& mensaje, std::vector<std::string>& bloques) {
-    for (size_t i = 0; i < mensaje.size(); i += 3) {
-        bloques.push_back(mensaje.substr(i, 3));
+        // Escribir el mensaje bit a bit
+        size_t indicePixel = BITS_DE_TAMANIO; // Comenzar después de los bits del tamaño
+        for (uint8_t byte : mensaje) {
+            for (int i = 7; i >= 0; --i) {
+                uint8_t bit = (byte >> i) & 1;
+                escribirBitEnPixel(pixeles[indicePixel], bit);
+                ++indicePixel;
+            }
+        }
     }
-}
 
-void ESTAGANOGRAFIA::escribirSobreCanal(unsigned char& canal, const unsigned char bit) {
-    if (bit == '1') {
-        canal |= 1; // Establecer el bit menos significativo en 1
-    } else {
-        canal &= ~1; // Establecer el bit menos significativo en 0
-    }
-}
+    bool extraerMensaje(const std::vector<unsigned char>& pixeles, std::vector<uint8_t>& mensaje) {
+        if (pixeles.empty()) {
+            std::cerr << "No hay píxeles en la imagen." << std::endl;
+            return false;
+        }
 
-void ESTAGANOGRAFIA::escribirPixeles(const std::string& nombreArchivo, const std::vector<unsigned char>& pixeles, const int& ancho, const int& alto) {
-    if (stbi_write_png(nombreArchivo.c_str(), ancho, alto, CANALES_RGB, pixeles.data(), ancho * CANALES_RGB) == 0) {
-        std::cerr << "Error al escribir la imagen: " << nombreArchivo << std::endl;
-    } else {
-        std::cout << "Imagen guardada correctamente: " << nombreArchivo << std::endl;
+        // Leer el tamaño del mensaje
+        uint32_t tamanioMensaje = leerTamanioMensaje(pixeles);
+
+        size_t bitsMensaje = tamanioMensaje * 8;
+        size_t capacidadBits = pixeles.size() - BITS_DE_TAMANIO;
+
+        if (bitsMensaje > capacidadBits) {
+            std::cerr << "El tamaño del mensaje es inconsistente con la imagen." << std::endl;
+            return false;
+        }
+
+        // Leer el mensaje bit a bit
+        mensaje.clear();
+        mensaje.reserve(tamanioMensaje);
+
+        size_t indicePixel = BITS_DE_TAMANIO; // Comenzar después de los bits del tamaño
+        uint8_t byte = 0;
+
+        for (size_t i = 0; i < bitsMensaje; ++i) {
+            uint8_t bit = leerBitDePixel(pixeles[indicePixel]);
+            byte = (byte << 1) | bit;
+
+            if ((i + 1) % 8 == 0) {
+                mensaje.push_back(byte);
+                byte = 0;
+            }
+
+            ++indicePixel;
+        }
+
+        return true;
     }
-}
+
+    bool escribirPixeles(const std::string& nombreArchivo, const std::vector<unsigned char>& pixeles, const int& ancho, const int& alto) {
+        if (stbi_write_png(nombreArchivo.c_str(), ancho, alto, CANALES_RGB, pixeles.data(), ancho * CANALES_RGB) == 0) {
+            std::cerr << "Error al escribir la imagen: " << nombreArchivo << std::endl;
+            return false;
+        } else {
+            std::cout << "Imagen guardada correctamente: " << nombreArchivo << std::endl;
+            return true;
+        }
+    }
+
+    // Implementaciones de funciones auxiliares privadas
+
+    namespace {
+
+        void escribirTamanioMensaje(std::vector<unsigned char>& pixeles, uint32_t tamanio) {
+            for (int i = 0; i < BITS_DE_TAMANIO; ++i) {
+                uint8_t bit = (tamanio >> (BITS_DE_TAMANIO - 1 - i)) & 1;
+                escribirBitEnPixel(pixeles[i], bit);
+            }
+        }
+
+        uint32_t leerTamanioMensaje(const std::vector<unsigned char>& pixeles) {
+            uint32_t tamanio = 0;
+            for (int i = 0; i < BITS_DE_TAMANIO; ++i) {
+                uint8_t bit = leerBitDePixel(pixeles[i]);
+                tamanio = (tamanio << 1) | bit;
+            }
+            return tamanio;
+        }
+
+        void escribirBitEnPixel(unsigned char& canal, uint8_t bit) {
+            canal = (canal & 0xFE) | (bit & 1);
+        }
+
+        uint8_t leerBitDePixel(const unsigned char& canal) {
+            return canal & 1;
+        }
+
+    } // namespace privado
+
+} // namespace ESTEGANOGRAFIA
