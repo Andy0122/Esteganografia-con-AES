@@ -8,7 +8,9 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(esteganografia)
 
 # Añadir el ejecutable
-add_executable(Esteganografia_con_AES main.cpp)
+add_executable(Esteganografia_con_AES main.cpp
+        cifrado/AES.cpp
+        cifrado/AES.h)
 
 # Enlazar los modulos
 target_link_libraries(Esteganografia_con_AES PRIVATE Esteganografia)
