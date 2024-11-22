@@ -76,17 +76,19 @@ void ocultarMensaje(const std::string& rutaImagen, const std::string& rutaImagen
     }
     mensaje.assign(std::istreambuf_iterator<char>(archivoMensaje), std::istreambuf_iterator<char>());
     archivoMensaje.close();
-
+    std::cout << "Cifrando Mensaje ... " << std::endl;
     // Cifrar el mensaje
     std::vector<uint8_t> mensajeCifrado = aes.Encrypt(mensaje);
-
+    std::cout << "Mensaje cifado " << std::endl;
+    std::cout << "Abriendo imagen ... " << std::endl;
     // Leer la imagen
     std::vector<unsigned char> pixeles;
     int ancho, alto;
     if (!leerPixeles(rutaImagen, pixeles, ancho, alto)) {
         return;
     }
-
+    std::cout << "Imagen Abierta " << std::endl;
+    std::cout << "Ocultando Mensaje ... " << std::endl;
     // Ocultar el mensaje cifrado en la imagen
     impregnarMensaje(pixeles, mensajeCifrado);
 
@@ -107,7 +109,6 @@ void extraerMensaje(const std::string& rutaImagen, const std::string& rutaMensaj
     if (!leerPixeles(rutaImagen, pixeles, ancho, alto)) {
         return;
     }
-
     // Extraer el mensaje cifrado de la imagen
     std::vector<uint8_t> mensajeCifrado;
     if (!extraerMensaje(pixeles, mensajeCifrado)) {
